@@ -1,15 +1,10 @@
 import streamlit as st
 import pandas as pd
 
-st.title("🇵🇭 Manila Salary Search")
+st.title("🇵🇭 Manila Salary Dashboard")
 
 # -----------------------------
-# User Input
-# -----------------------------
-job = st.text_input("Enter Job Title (e.g. Engineer, Accountant)")
-
-# -----------------------------
-# Sample Dataset（あとでAPI/CSVに置き換え）
+# Data（あとでSheetsに置き換えOK）
 # -----------------------------
 data = pd.DataFrame({
     "Job": ["Engineer", "Accountant", "HR"],
@@ -22,29 +17,38 @@ data = pd.DataFrame({
 })
 
 # -----------------------------
-# Search Logic
+# UI（ここがポイント）
 # -----------------------------
-if job:
-    result = data[data["Job"].str.contains(job, case=False)]
+job = st.selectbox("Select Job Role", data["Job"].unique())
 
-    if not result.empty:
-        row = result.iloc[0]
+row = data[data["Job"] == job].iloc[0]
 
-        # Weighted calc
-        def calc(gov, non):
-            return gov * 0.8 + non * 0.2
+# -----------------------------
+# Calculation
+# -----------------------------
+def calc(gov, non):
+    return gov * 0.8 + non * 0.2
 
-        newbie = calc(row["Newbie_gov"], row["Newbie_non"])
-        mid = calc(row["Mid_gov"], row["Mid_non"])
-        manager = calc(row["Manager_gov"], row["Manager_non"])
+newbie = calc(row["Newbie_gov"], row["Newbie_non"])
+mid = calc(row["Mid_gov"], row["Mid_non"])
+manager = calc(row["Manager_gov"], row["Manager_non"])
 
-        # Display
-        st.subheader(f"💼 {job} Salary")
+# -----------------------------
+# Display
+# -----------------------------
+st.subheader(f"💼 {job} Salary")
 
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Newbie", f"₱{newbie:,.0f}")
-        col2.metric("Mid-level", f"₱{mid:,.0f}")
-        col3.metric("Manager", f"₱{manager:,.0f}")
+col1, col2, col3 = st.columns(3)
+col1.metric("Newbie", f"₱{newbie:,.0f}")
+col2.metric("Mid-level", f"₱{mid:,.0f}")
+col3.metric("Manager", f"₱{manager:,.0f}")
 
-    else:
-        st.warning("No data found. Try another job.")
+# -----------------------------
+# Visualization
+# -----------------------------
+chart_data = pd.DataFrame({
+    "Level": ["Newbie", "Mid", "Manager"],
+    "Salary": [newbie, mid, manager]
+})
+
+st.bar_chart(chart_data.set_index("Level"))
