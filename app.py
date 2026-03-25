@@ -10,7 +10,19 @@ st.title("🇵🇭 Manila Salary Benchmark")
 st.markdown("Weighted salary estimation (**80% Government + 20% Market Data**)")
 
 # -----------------------------
-# Data（URL付き）
+# Multiplier（追加部分🔥）
+# -----------------------------
+st.sidebar.header("⚙️ Adjustment")
+
+multiplier = st.sidebar.slider(
+    "Salary Adjustment Multiplier",
+    0.3, 1.5, 1.0, 0.01
+)
+
+st.sidebar.caption(f"Applied Multiplier: x{multiplier}")
+
+# -----------------------------
+# Data
 # -----------------------------
 data = pd.DataFrame({
     "Job": [
@@ -18,73 +30,32 @@ data = pd.DataFrame({
         "Sales", "Marketing", "IT Support", "Customer Service"
     ],
 
-    # Government
     "Entry_gov": [15000, 14000, 13000, 14000, 15000, 14000, 13000],
-    "Entry_gov_src": [
-        "https://psa.gov.ph/wages/engineer",
-        "https://psa.gov.ph/wages/accountant",
-        "https://dole.gov.ph/hr-wage",
-        "https://psa.gov.ph/wages/sales",
-        "https://psa.gov.ph/wages/marketing",
-        "https://psa.gov.ph/wages/it-support",
-        "https://psa.gov.ph/wages/customer-service"
-    ],
+    "Entry_gov_src": ["PSA", "PSA", "DOLE", "PSA", "PSA", "PSA", "PSA"],
+    "Entry_gov_url": ["https://psa.gov.ph"]*7,
 
     "Exp_gov": [35000, 30000, 28000, 30000, 32000, 30000, 27000],
-    "Exp_gov_src": [
-        "https://psa.gov.ph/wages/engineer-mid",
-        "https://psa.gov.ph/wages/accountant-mid",
-        "https://dole.gov.ph/hr-mid",
-        "https://psa.gov.ph/wages/sales-mid",
-        "https://psa.gov.ph/wages/marketing-mid",
-        "https://psa.gov.ph/wages/it-mid",
-        "https://psa.gov.ph/wages/cs-mid"
-    ],
+    "Exp_gov_src": ["PSA", "PSA", "DOLE", "PSA", "PSA", "PSA", "PSA"],
+    "Exp_gov_url": ["https://psa.gov.ph"]*7,
 
     "Mng_gov": [80000, 70000, 65000, 70000, 75000, 68000, 60000],
-    "Mng_gov_src": [
-        "https://psa.gov.ph/wages/engineer-manager",
-        "https://psa.gov.ph/wages/accountant-manager",
-        "https://dole.gov.ph/hr-manager",
-        "https://psa.gov.ph/wages/sales-manager",
-        "https://psa.gov.ph/wages/marketing-manager",
-        "https://psa.gov.ph/wages/it-manager",
-        "https://psa.gov.ph/wages/cs-manager"
-    ],
+    "Mng_gov_src": ["PSA", "PSA", "DOLE", "PSA", "PSA", "PSA", "PSA"],
+    "Mng_gov_url": ["https://psa.gov.ph"]*7,
 
-    # Non-Government
     "Entry_non": [18000, 16000, 15000, 17000, 18000, 16000, 15000],
-    "Entry_non_src": [
-        "https://jobstreet.com/engineer-salary",
-        "https://glassdoor.com/accountant-salary",
-        "https://jobstreet.com/hr-salary",
-        "https://jobstreet.com/sales-salary",
-        "https://glassdoor.com/marketing-salary",
-        "https://jobstreet.com/it-support-salary",
-        "https://glassdoor.com/customer-service-salary"
-    ],
+    "Entry_non_src": ["JobStreet", "Glassdoor", "JobStreet", "JobStreet", "Glassdoor", "JobStreet", "Glassdoor"],
+    "Entry_non_url": ["https://www.jobstreet.com.ph", "https://www.glassdoor.com", "https://www.jobstreet.com.ph",
+                      "https://www.jobstreet.com.ph", "https://www.glassdoor.com", "https://www.jobstreet.com.ph", "https://www.glassdoor.com"],
 
     "Exp_non": [40000, 35000, 32000, 35000, 38000, 34000, 30000],
-    "Exp_non_src": [
-        "https://jobstreet.com/engineer-mid",
-        "https://glassdoor.com/accountant-mid",
-        "https://jobstreet.com/hr-mid",
-        "https://jobstreet.com/sales-mid",
-        "https://glassdoor.com/marketing-mid",
-        "https://jobstreet.com/it-mid",
-        "https://glassdoor.com/cs-mid"
-    ],
+    "Exp_non_src": ["JobStreet", "Glassdoor", "JobStreet", "JobStreet", "Glassdoor", "JobStreet", "Glassdoor"],
+    "Exp_non_url": ["https://www.jobstreet.com.ph", "https://www.glassdoor.com", "https://www.jobstreet.com.ph",
+                    "https://www.jobstreet.com.ph", "https://www.glassdoor.com", "https://www.jobstreet.com.ph", "https://www.glassdoor.com"],
 
     "Mng_non": [90000, 80000, 75000, 82000, 85000, 78000, 70000],
-    "Mng_non_src": [
-        "https://jobstreet.com/engineer-manager",
-        "https://glassdoor.com/accountant-manager",
-        "https://jobstreet.com/hr-manager",
-        "https://jobstreet.com/sales-manager",
-        "https://glassdoor.com/marketing-manager",
-        "https://jobstreet.com/it-manager",
-        "https://glassdoor.com/cs-manager"
-    ],
+    "Mng_non_src": ["JobStreet", "Glassdoor", "JobStreet", "JobStreet", "Glassdoor", "JobStreet", "Glassdoor"],
+    "Mng_non_url": ["https://www.jobstreet.com.ph", "https://www.glassdoor.com", "https://www.jobstreet.com.ph",
+                    "https://www.jobstreet.com.ph", "https://www.glassdoor.com", "https://www.jobstreet.com.ph", "https://www.glassdoor.com"],
 })
 
 # -----------------------------
@@ -94,10 +65,11 @@ job = st.selectbox("💼 Select Job Role", data["Job"])
 row = data[data["Job"] == job].iloc[0]
 
 # -----------------------------
-# Calculation
+# Calculation（倍率適用🔥）
 # -----------------------------
 def calc(gov, non):
-    return gov * 0.8 + non * 0.2
+    base = gov * 0.8 + non * 0.2
+    return base * multiplier
 
 entry = calc(row["Entry_gov"], row["Entry_non"])
 exp = calc(row["Exp_gov"], row["Exp_non"])
@@ -109,7 +81,6 @@ mng = calc(row["Mng_gov"], row["Mng_non"])
 st.subheader(f"📊 {job} Salary (Monthly PHP)")
 
 col1, col2, col3 = st.columns(3)
-
 col1.metric("Entry Level", f"₱{entry:,.0f}")
 col2.metric("Experienced", f"₱{exp:,.0f}")
 col3.metric("Managerial", f"₱{mng:,.0f}")
@@ -125,25 +96,25 @@ chart_data = pd.DataFrame({
 st.bar_chart(chart_data)
 
 # -----------------------------
-# Clickable Source
+# Sources
 # -----------------------------
 with st.expander("🔎 View Data Sources"):
     st.markdown(f"""
 ### Entry Level
-- [Gov Source]({row['Entry_gov_src']})
-- [Market Source]({row['Entry_non_src']})
+- [Gov: {row['Entry_gov_src']}]({row['Entry_gov_url']})
+- [Market: {row['Entry_non_src']}]({row['Entry_non_url']})
 
 ### Experienced
-- [Gov Source]({row['Exp_gov_src']})
-- [Market Source]({row['Exp_non_src']})
+- [Gov: {row['Exp_gov_src']}]({row['Exp_gov_url']})
+- [Market: {row['Exp_non_src']}]({row['Exp_non_url']})
 
 ### Managerial
-- [Gov Source]({row['Mng_gov_src']})
-- [Market Source]({row['Mng_non_src']})
+- [Gov: {row['Mng_gov_src']}]({row['Mng_gov_url']})
+- [Market: {row['Mng_non_src']}]({row['Mng_non_url']})
 """)
 
 # -----------------------------
 # Footer
 # -----------------------------
 st.markdown("---")
-st.caption("Note: Replace sample URLs with actual PSA / DOLE / JobStreet / Glassdoor deep links.")
+st.caption("Sources: PSA, DOLE, JobStreet, Glassdoor (Top pages)")
