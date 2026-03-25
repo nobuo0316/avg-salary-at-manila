@@ -1,86 +1,50 @@
 import streamlit as st
+import pandas as pd
 
-st.set_page_config(page_title="Manila Salary Dashboard", layout="centered")
-
-st.title("🇵🇭 Manila Salary Benchmark Dashboard")
-
-st.markdown("This dashboard shows estimated salary levels in Manila using weighted data sources.")
+st.title("🇵🇭 Manila Salary Search")
 
 # -----------------------------
-# Sample Data (Monthly PHP)
+# User Input
 # -----------------------------
-# Government Data (e.g. PSA, DOLE)
-gov_data = {
-    "Newbie": 15000,
-    "Mid-level": 35000,
-    "Manager": 80000
-}
-
-# Non-Government Data (e.g. Jobstreet, Glassdoor)
-nongov_data = {
-    "Newbie": 18000,
-    "Mid-level": 40000,
-    "Manager": 90000
-}
-
-# Weights
-GOV_WEIGHT = 0.8
-NONGOV_WEIGHT = 0.2
+job = st.text_input("Enter Job Title (e.g. Engineer, Accountant)")
 
 # -----------------------------
-# Weighted Calculation
+# Sample Dataset（あとでAPI/CSVに置き換え）
 # -----------------------------
-def weighted_salary(level):
-    return (
-        gov_data[level] * GOV_WEIGHT +
-        nongov_data[level] * NONGOV_WEIGHT
-    )
-
-# Compute results
-results = {
-    level: weighted_salary(level)
-    for level in gov_data.keys()
-}
+data = pd.DataFrame({
+    "Job": ["Engineer", "Accountant", "HR"],
+    "Newbie_gov": [15000, 14000, 13000],
+    "Mid_gov": [35000, 30000, 28000],
+    "Manager_gov": [80000, 70000, 65000],
+    "Newbie_non": [18000, 16000, 15000],
+    "Mid_non": [40000, 35000, 32000],
+    "Manager_non": [90000, 80000, 75000],
+})
 
 # -----------------------------
-# UI Display
+# Search Logic
 # -----------------------------
-st.subheader("💰 Estimated Monthly Salary (PHP)")
+if job:
+    result = data[data["Job"].str.contains(job, case=False)]
 
-col1, col2, col3 = st.columns(3)
+    if not result.empty:
+        row = result.iloc[0]
 
-with col1:
-    st.metric("Newbie", f"₱{results['Newbie']:,.0f}")
+        # Weighted calc
+        def calc(gov, non):
+            return gov * 0.8 + non * 0.2
 
-with col2:
-    st.metric("Mid-level", f"₱{results['Mid-level']:,.0f}")
+        newbie = calc(row["Newbie_gov"], row["Newbie_non"])
+        mid = calc(row["Mid_gov"], row["Mid_non"])
+        manager = calc(row["Manager_gov"], row["Manager_non"])
 
-with col3:
-    st.metric("Manager", f"₱{results['Manager']:,.0f}")
+        # Display
+        st.subheader(f"💼 {job} Salary")
 
-# -----------------------------
-# Details Section
-# -----------------------------
-with st.expander("📊 Data Sources & Methodology"):
-    st.markdown("""
-    **Weighting Method**
-    - Government Data: 80%
-    - Non-Government Data: 20%
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Newbie", f"₱{newbie:,.0f}")
+        col2.metric("Mid-level", f"₱{mid:,.0f}")
+        col3.metric("Manager", f"₱{manager:,.0f}")
 
-    **Government Sources (Example)**
-    - Philippine Statistics Authority (PSA)
-    - DOLE
-
-    **Non-Government Sources (Example)**
-    - JobStreet
-    - Glassdoor
-
-    *Note: Values are sample estimates. Replace with real datasets if available.*
-    """)
-
-# -----------------------------
-# Optional Chart
-# -----------------------------
-st.subheader("📈 Salary Comparison")
-
-st.bar_chart(results)
+    else:
+        st.warning("No data found. Try another job.")
